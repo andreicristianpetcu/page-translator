@@ -185,3 +185,10 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
 Bind clicks on the page action icon to the WebExtension
 */
 browser.pageAction.onClicked.addListener(injectTranslatorCode);
+
+
+browser.commands.onCommand.addListener(function(action) {
+  if (action == "translate-current-page") {
+    injectTranslatorCode();
+  }
+});

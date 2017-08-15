@@ -26,6 +26,14 @@
         "default_icon": "icons/icon.svg",
         "default_title": "Translate"
     },
+    "commands": {
+      "translate-current-page": {
+        "suggested_key": {
+          "default": "Alt+Shift+R"
+        },
+        "description": "Translate Current Page"
+      }
+    },
     "background": {
         "scripts": ["background.js"]
     },
