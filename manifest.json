@@ -20,7 +20,11 @@
         "<all_urls>",
         "activeTab",
         "storage",
-        "tabs"
+        "tabs",
+        "contextMenus",
+        "activeTab",
+        "webRequest",
+        "<all_urls>"
     ],
     "page_action": {
         "browser_style": true,

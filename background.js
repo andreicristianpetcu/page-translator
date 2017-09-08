@@ -185,3 +185,58 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
 Bind clicks on the page action icon to the WebExtension
 */
 browser.pageAction.onClicked.addListener(injectTranslatorCode);
+
+browser.contextMenus.create({
+    id: "alway-translate-domain",
+    title: "Alway translate this domain"
+});
+
+function buildDomainsPromise(){
+    return browser.storage.local.get().then((storage) => {
+        var domains = storage.domains;
+        if(domains === null) {
+            domains = {};
+        }
+        console.log("domains are=" + domains);
+        return domains;
+    });
+}
+
+browser.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "alway-translate-domain") {
+        var activeHostnamePromise = browser.tabs.query({active: true, currentWindow: true}).then(activeTab => {
+            return new URL(activeTab[0].url).hostname;
+        });
+        Promise.all([buildDomainsPromise(), activeHostnamePromise]).then((values) => {
+            var domains = values[0];
+            var activeHostname = values[1];
+            console.log(domains);
+            console.log(activeHostname);
+            if(domains[activeHostname]){
+                console.log("do not translate " + activeHostname);
+                delete domains[activeHostname];
+//                domains.delete(activeHostname);
+            } else {
+//                domains.add(activeHostname);
+                console.log("translate " + activeHostname);
+                domains[activeHostname] = true;
+            }
+            browser.storage.local.set({domains: domains});
+        });
+    }
+});
+
+browser.webRequest.onCompleted.addListener(
+    function(requestDetails){
+        var activeHostname = new URL(requestDetails.url).hostname;
+        buildDomainsPromise().then(domains => {
+            var shouldTranslate = domains[activeHostname];
+            if(shouldTranslate){
+                injectTranslatorCode();
+            }
+        });
+    }, {
+        urls: ["<all_urls>"],
+        types: ["main_frame"]
+    }
+);
