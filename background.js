@@ -191,50 +191,60 @@ browser.contextMenus.create({
     title: "Alway translate this domain"
 });
 
-function buildDomainsPromise(){
+async function getDomains(){
     return browser.storage.local.get().then((storage) => {
-        var domains = storage.domains;
-        if(domains === null) {
-            domains = {};
+        if(storage.domains == undefined || !Array.isArray( storage.domains )) {
+            storage.domains = []
+            browser.storage.local.set(storage);
         }
-        console.log("domains are=" + domains);
-        return domains;
+        console.log("domains are=" + storage.domains);
+        return storage.domains;
     });
+}
+
+async function getActiveHostname(){
+    return browser.tabs.query({active: true, currentWindow: true}).then(activeTab => {
+        return new URL(activeTab[0].url).hostname;
+    })
+}
+
+async function toggleAlwaysTranslateCurrentDomain(){
+    var domains = await getDomains();
+    var activeHostname = await getActiveHostname();
+    console.log(domains);
+    console.log(activeHostname);
+    if(domains[activeHostname]){
+        console.log("do not translate " + activeHostname);
+        domains[activeHostname] = false;
+    } else {
+        console.log("translate " + activeHostname);
+        domains[activeHostname] = true;
+    }
+    console.log("saving domains " + domains);
+    var localStorage = await browser.storage.local.get();
+    localStorage["domains"] = domains;
+    console.log("saving local storage " + localStorage);
+    browser.storage.local.set(localStorage);
 }
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "alway-translate-domain") {
-        var activeHostnamePromise = browser.tabs.query({active: true, currentWindow: true}).then(activeTab => {
-            return new URL(activeTab[0].url).hostname;
-        });
-        Promise.all([buildDomainsPromise(), activeHostnamePromise]).then((values) => {
-            var domains = values[0];
-            var activeHostname = values[1];
-            console.log(domains);
-            console.log(activeHostname);
-            if(domains[activeHostname]){
-                console.log("do not translate " + activeHostname);
-                delete domains[activeHostname];
-//                domains.delete(activeHostname);
-            } else {
-//                domains.add(activeHostname);
-                console.log("translate " + activeHostname);
-                domains[activeHostname] = true;
-            }
-            browser.storage.local.set({domains: domains});
-        });
+        toggleAlwaysTranslateCurrentDomain();
     }
 });
+
+async function asyncInjectTranslatorCodeIfNeeded(activeHostname){
+    var domains = await getDomains();
+    var shouldTranslate = domains[activeHostname];
+    if(shouldTranslate){
+        injectTranslatorCode();
+    }
+}
 
 browser.webRequest.onCompleted.addListener(
     function(requestDetails){
         var activeHostname = new URL(requestDetails.url).hostname;
-        buildDomainsPromise().then(domains => {
-            var shouldTranslate = domains[activeHostname];
-            if(shouldTranslate){
-                injectTranslatorCode();
-            }
-        });
+        asyncInjectTranslatorCodeIfNeeded(activeHostname);
     }, {
         urls: ["<all_urls>"],
         types: ["main_frame"]
