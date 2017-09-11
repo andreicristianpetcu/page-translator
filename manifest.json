@@ -22,9 +22,7 @@
         "storage",
         "tabs",
         "contextMenus",
-        "activeTab",
-        "webRequest",
-        "<all_urls>"
+        "webRequest"
     ],
     "page_action": {
         "browser_style": true,

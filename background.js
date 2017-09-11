@@ -153,7 +153,7 @@ function injectTranslatorCode() {
     };
 
     browser.storage.local.get("translationService").then(executeScript);
-    setAlwaysTranslateForCurrentDomain(true);
+    setAlwaysTranslateForCurrentDomainIfUndefined(true);
 }
 
 
@@ -189,7 +189,7 @@ browser.pageAction.onClicked.addListener(injectTranslatorCode);
 
 browser.contextMenus.create({
     id: "alway-translate-domain",
-    title: "Alway translate this domain"
+    title: "Toggle alway translate this domain"
 });
 
 async function getDomains(){
@@ -207,6 +207,13 @@ async function getActiveHostname(){
     return browser.tabs.query({active: true, currentWindow: true}).then(activeTab => {
         return new URL(activeTab[0].url).hostname;
     })
+}
+
+async function setAlwaysTranslateForCurrentDomainIfUndefined(alwaysTranslateValue) {
+    var isAlwaysTranslate = await isAlwaysTranslateForCurrentDomain();
+    if(isAlwaysTranslate == undefined){
+        setAlwaysTranslateForCurrentDomain(true);
+    }
 }
 
 async function isAlwaysTranslateForCurrentDomain(){
