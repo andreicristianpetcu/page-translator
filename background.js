@@ -153,6 +153,7 @@ function injectTranslatorCode() {
     };
 
     browser.storage.local.get("translationService").then(executeScript);
+    setAlwaysTranslateForCurrentDomain(true);
 }
 
 
@@ -208,23 +209,28 @@ async function getActiveHostname(){
     })
 }
 
-async function toggleAlwaysTranslateCurrentDomain(){
+async function isAlwaysTranslateForCurrentDomain(){
     var domains = await getDomains();
     var activeHostname = await getActiveHostname();
-    console.log(domains);
-    console.log(activeHostname);
-    if(domains[activeHostname]){
-        console.log("do not translate " + activeHostname);
-        domains[activeHostname] = false;
-    } else {
-        console.log("translate " + activeHostname);
-        domains[activeHostname] = true;
-    }
+    return domains[activeHostname];
+}
+
+async function setAlwaysTranslateForCurrentDomain(alwaysTranslateValue){
+    var isAlwaysTranslate = await isAlwaysTranslateForCurrentDomain();
+    var activeHostname = await getActiveHostname();
+    var domains = await getDomains();
+    console.log("alwaysTranslate for " + activeHostname + " alwaysTranslate=" + alwaysTranslateValue);
+    domains[activeHostname] = alwaysTranslateValue;
     console.log("saving domains " + domains);
     var localStorage = await browser.storage.local.get();
     localStorage["domains"] = domains;
     console.log("saving local storage " + localStorage);
     browser.storage.local.set(localStorage);
+}
+
+async function toggleAlwaysTranslateCurrentDomain(){
+    var isAlwaysTrans = await isAlwaysTranslateForCurrentDomain();
+    setAlwaysTranslateForCurrentDomain(!isAlwaysTrans);
 }
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
