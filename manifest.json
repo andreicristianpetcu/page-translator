@@ -22,7 +22,8 @@
         "storage",
         "tabs",
         "contextMenus",
-        "webRequest"
+        "webRequest",
+        "webNavigation"
     ],
     "page_action": {
         "browser_style": true,

@@ -254,12 +254,9 @@ async function asyncInjectTranslatorCodeIfNeeded(activeHostname){
     }
 }
 
-browser.webRequest.onCompleted.addListener(
+browser.webNavigation.onCompleted.addListener(
     function(requestDetails){
         var activeHostname = new URL(requestDetails.url).hostname;
         asyncInjectTranslatorCodeIfNeeded(activeHostname);
-    }, {
-        urls: ["<all_urls>"],
-        types: ["main_frame"]
     }
 );
